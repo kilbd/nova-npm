@@ -1,0 +1,15 @@
+{
+  "name": "nova-npm",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Drew Kilb",
+  "devDependencies": {
+    "@types/nova-editor": "1.0.0",
+    "prettier": "^2.1.2",
+    "typescript": "4.0.3"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  }
+}

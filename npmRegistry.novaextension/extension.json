@@ -1,0 +1,16 @@
+{
+  "identifier": "com.kilb.nova.npm-registry",
+  "name": "NPM Registry",
+  "organization": "Drew Kilb",
+  "description": "Package and version autocomplete from the NPM Registry.",
+  "version": "1.0",
+  "categories": ["completions"],
+
+  "main": "main.js",
+
+  "activationEvents": ["onWorkspaceContains:package.json"],
+
+  "entitlements": {
+    "requests": true
+  }
+}
