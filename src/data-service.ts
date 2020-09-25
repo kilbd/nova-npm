@@ -9,6 +9,18 @@ export class NpmDataService {
     data.sort((a, b) => b.score.detail.popularity - a.score.detail.popularity)
     return data.map((item) => item.package.name)
   }
+
+  async getVersions(packageName: string = ''): Promise<NpmVersions> {
+    let result = await fetch(
+      `https://registry.npmjs.org/-/package/${packageName}/dist-tags`
+    )
+    return await result.json()
+  }
+}
+
+export interface NpmVersions {
+  latest: string
+  [key: string]: string
 }
 
 interface NpmsIoData {

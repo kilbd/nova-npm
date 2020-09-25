@@ -18,7 +18,16 @@ export class NpmCompletionAssistant implements CompletionAssistant {
       let doc = editor.getTextInRange(new Range(0, editor.document.length))
       if (this.inDependencies(doc, context)) {
         if (this.versionTest.test(context.line)) {
-          //TODO: get this to work next
+          let options: CompletionItem[] = []
+          const matches = context.line.match(this.versionTest)
+          const versions = await this.dataSvc.getVersions(matches?.[1])
+          this.qualifiedVersions(versions.latest, 'latest', options)
+          Object.keys(versions).forEach((key) => {
+            if (key !== 'latest') {
+              this.qualifiedVersions(versions[key], key, options)
+            }
+          })
+          return options
         } else if (this.packageTest.test(context.line)) {
           await this.formatBeforePackage(context, editor)
           const packages: string[] = await this.dataSvc.getPackageNames(
@@ -51,6 +60,37 @@ export class NpmCompletionAssistant implements CompletionAssistant {
       (context.position > depStart && context.position < depEnd) ||
       (context.position > devDepStart && context.position < devDepEnd)
     )
+  }
+
+  qualifiedVersions(
+    version: string,
+    label: string,
+    list: CompletionItem[]
+  ): void {
+    const majVersion = new CompletionItem(
+      `^${version}`,
+      CompletionItemKind.Package
+    )
+    majVersion.detail = label
+    majVersion.filterText = label
+    majVersion.insertText = `"^${version}",`
+    const minorVersion = new CompletionItem(
+      `~${version}`,
+      CompletionItemKind.Package
+    )
+    minorVersion.detail = label
+    minorVersion.filterText = label
+    minorVersion.insertText = `"~${version}",`
+    const exactVersion = new CompletionItem(
+      ` ${version}`,
+      CompletionItemKind.Package
+    )
+    exactVersion.insertText = `"${version}",`
+    exactVersion.detail = label
+    exactVersion.filterText = label
+    list.push(majVersion)
+    list.push(minorVersion)
+    list.push(exactVersion)
   }
 
   async formatBeforePackage(
