@@ -1,7 +1,7 @@
 export class NpmDataService {
   constructor() {}
 
-  async getPackageNames(query: string): Promise<string[]> {
+  async getPackageNames(query: string = ''): Promise<string[]> {
     let result = await fetch(
       `https://api.npms.io/v2/search/suggestions?q=${query}`
     )

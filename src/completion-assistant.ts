@@ -2,10 +2,10 @@ import { NpmDataService } from './data-service'
 
 export class NpmCompletionAssistant implements CompletionAssistant {
   dataSvc: NpmDataService
-  packageTest = /^(\s*)"?([a-z0-9_-]+)/
-  versionTest = /^(\s*)"([a-z0-9_-]+)": *"?[~^]?([a-z\.0-9_-]+)/
-  packageFormatTest = /(\s*)"([a-z0-9_-]+)/
-  versionFormatTest = /(\s*)"([a-z0-9_-]+)": "([^~]?(\d+\.?){0,3})/
+  packageTest = /^(\s*)"?([@a-z0-9/_-]+)/
+  versionTest = /^(\s*)"([@a-z0-9/_-]+)": *"?[~^]?([a-z\.0-9_-]+)/
+  packageFormatTest = /^(\s*)"([@a-z0-9/_-]+)/
+  versionFormatTest = /^(\s*)"([@a-z0-9/_-]+)": "([^~]?(\d+\.?){0,3})/
 
   constructor() {
     this.dataSvc = new NpmDataService()
@@ -33,7 +33,7 @@ export class NpmCompletionAssistant implements CompletionAssistant {
         } else if (this.packageTest.test(context.line)) {
           await this.formatBeforePackage(context, editor)
           const packages: string[] = await this.dataSvc.getPackageNames(
-            context.text
+            context.line.match(this.packageTest)?.[2]
           )
           return packages.map((pkg, idx) => {
             let item = new CompletionItem(
