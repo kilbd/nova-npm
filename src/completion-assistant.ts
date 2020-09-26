@@ -2,9 +2,10 @@ import { NpmDataService } from './data-service'
 
 export class NpmCompletionAssistant implements CompletionAssistant {
   dataSvc: NpmDataService
-  packageTest = /(^\s*)"?([a-z0-9_-]+)/
-  versionTest = /^\s*"([a-z0-9_-]+)": *"?([^~]?(\d+\.?)*)/
+  packageTest = /^(\s*)"?([a-z0-9_-]+)/
+  versionTest = /^(\s*)"([a-z0-9_-]+)": *"?[~^]?([a-z\.0-9_-]+)/
   packageFormatTest = /(\s*)"([a-z0-9_-]+)/
+  versionFormatTest = /(\s*)"([a-z0-9_-]+)": "([^~]?(\d+\.?){0,3})/
 
   constructor() {
     this.dataSvc = new NpmDataService()
@@ -18,9 +19,10 @@ export class NpmCompletionAssistant implements CompletionAssistant {
       let doc = editor.getTextInRange(new Range(0, editor.document.length))
       if (this.inDependencies(doc, context)) {
         if (this.versionTest.test(context.line)) {
+          await this.formatBeforeVersion(context, editor)
           let options: CompletionItem[] = []
           const matches = context.line.match(this.versionTest)
-          const versions = await this.dataSvc.getVersions(matches?.[1])
+          const versions = await this.dataSvc.getVersions(matches?.[2])
           this.qualifiedVersions(versions.latest, 'latest', options)
           Object.keys(versions).forEach((key) => {
             if (key !== 'latest') {
@@ -73,19 +75,19 @@ export class NpmCompletionAssistant implements CompletionAssistant {
     )
     majVersion.detail = label
     majVersion.filterText = label
-    majVersion.insertText = `"^${version}",`
+    majVersion.insertText = `^${version}",`
     const minorVersion = new CompletionItem(
       `~${version}`,
       CompletionItemKind.Package
     )
     minorVersion.detail = label
     minorVersion.filterText = label
-    minorVersion.insertText = `"~${version}",`
+    minorVersion.insertText = `~${version}",`
     const exactVersion = new CompletionItem(
       ` ${version}`,
       CompletionItemKind.Package
     )
-    exactVersion.insertText = `"${version}",`
+    exactVersion.insertText = `${version}",`
     exactVersion.detail = label
     exactVersion.filterText = label
     list.push(majVersion)
@@ -103,6 +105,22 @@ export class NpmCompletionAssistant implements CompletionAssistant {
       const matches = line.match(this.packageTest)
       await editor.edit((edit: TextEditorEdit) => {
         const replacement = `${matches?.[1]}"${matches?.[2]}`
+        edit.replace(range, replacement.substr(0, line.length))
+        edit.insert(context.position, replacement.substring(line.length))
+      })
+    }
+  }
+
+  async formatBeforeVersion(
+    context: CompletionContext,
+    editor: TextEditor
+  ): Promise<void> {
+    const line = context.line
+    if (!this.versionFormatTest.test(line)) {
+      const range = new Range(context.position - line.length, context.position)
+      const matches = line.match(this.versionTest)
+      await editor.edit((edit: TextEditorEdit) => {
+        const replacement = `${matches?.[1]}"${matches?.[2]}": "${matches?.[3]}`
         edit.replace(range, replacement.substr(0, line.length))
         edit.insert(context.position, replacement.substring(line.length))
       })
