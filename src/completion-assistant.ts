@@ -17,7 +17,7 @@ export class NpmCompletionAssistant implements CompletionAssistant {
   ): Promise<CompletionItem[] | void> {
     if (editor?.document?.path?.indexOf('package.json') !== -1) {
       let doc = editor.getTextInRange(new Range(0, editor.document.length))
-      if (this.inDependencies(doc, context)) {
+      if (this.inDependencies(doc, context.position)) {
         if (this.versionTest.test(context.line)) {
           await this.formatBeforeVersion(context, editor)
           let options: CompletionItem[] = []
@@ -49,7 +49,7 @@ export class NpmCompletionAssistant implements CompletionAssistant {
     }
   }
 
-  inDependencies(doc: string, context: CompletionContext): boolean {
+  inDependencies(doc: string, position: number): boolean {
     let depStart = doc.indexOf('"dependencies"')
     depStart = depStart !== -1 ? doc.indexOf('{', depStart) : 0
     const depEnd = depStart ? doc.indexOf('}', depStart) : 0
@@ -59,8 +59,8 @@ export class NpmCompletionAssistant implements CompletionAssistant {
     // Only want to trigger suggestions if the cursor is within the `dependencies`
     // or `devDependencies` objects.
     return (
-      (context.position > depStart && context.position < depEnd) ||
-      (context.position > devDepStart && context.position < devDepEnd)
+      (position > depStart && position < depEnd) ||
+      (position > devDepStart && position < devDepEnd)
     )
   }
 

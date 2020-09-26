@@ -4,11 +4,15 @@
   "private": true,
   "author": "Drew Kilb",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest --coverage"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.14",
     "@types/nova-editor": "1.0.0",
+    "jest": "^26.4.2",
     "prettier": "^2.1.2",
+    "ts-jest": "^26.4.0",
     "typescript": "4.0.3"
   },
   "prettier": {
