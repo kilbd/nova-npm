@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "author": "Drew Kilb",
+  "scripts": {
+    "build": "tsc"
+  },
   "devDependencies": {
     "@types/nova-editor": "1.0.0",
     "prettier": "^2.1.2",
