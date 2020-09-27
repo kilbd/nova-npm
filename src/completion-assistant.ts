@@ -67,7 +67,8 @@ export class NpmCompletionAssistant implements CompletionAssistant {
   qualifiedVersions(
     version: string,
     label: string,
-    list: CompletionItem[]
+    list: CompletionItem[],
+    range?: Range
   ): void {
     const majVersion = new CompletionItem(
       `^${version}`,
@@ -76,6 +77,7 @@ export class NpmCompletionAssistant implements CompletionAssistant {
     majVersion.detail = label
     majVersion.filterText = label
     majVersion.insertText = `^${version}",`
+    if (range) majVersion.range = range
     const minorVersion = new CompletionItem(
       `~${version}`,
       CompletionItemKind.Package
@@ -83,6 +85,7 @@ export class NpmCompletionAssistant implements CompletionAssistant {
     minorVersion.detail = label
     minorVersion.filterText = label
     minorVersion.insertText = `~${version}",`
+    if (range) minorVersion.range = range
     const exactVersion = new CompletionItem(
       ` ${version}`,
       CompletionItemKind.Package
@@ -90,6 +93,7 @@ export class NpmCompletionAssistant implements CompletionAssistant {
     exactVersion.insertText = `${version}",`
     exactVersion.detail = label
     exactVersion.filterText = label
+    if (range) exactVersion.range = range
     list.push(majVersion)
     list.push(minorVersion)
     list.push(exactVersion)

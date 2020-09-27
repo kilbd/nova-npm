@@ -55,8 +55,15 @@ describe('NpmCompletionAssistant', () => {
     expected.push(maj)
     expected.push(min)
     expected.push(exact)
-    const returned: CompletionItem[] = []
+    let returned: CompletionItem[] = []
     assist.qualifiedVersions('1.2.3', 'latest', returned)
+    expect(expected).toEqual(returned)
+    const range = new Range(10, 20)
+    maj.range = range
+    min.range = range
+    exact.range = range
+    returned = []
+    assist.qualifiedVersions('1.2.3', 'latest', returned, range)
     expect(expected).toEqual(returned)
   })
 })

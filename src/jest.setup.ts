@@ -4,13 +4,19 @@ enum MockCompletionItemKind {
   Package,
 }
 
+class MockRange {
+  constructor(readonly start: number, readonly end: number) {}
+}
+
 class MockCompletionItem {
-  detail: string | undefined
-  filterText: string | undefined
-  insertText: string | undefined
-  constructor(public label: string, public kind: CompletionItemKind) {}
+  detail?: string
+  filterText?: string
+  insertText?: string
+  range?: MockRange
+  constructor(public label: string, public kind: MockCompletionItemKind) {}
 }
 
 const testGlobal = global as any
 testGlobal.CompletionItem = MockCompletionItem
 testGlobal.CompletionItemKind = MockCompletionItemKind
+testGlobal.Range = MockRange
