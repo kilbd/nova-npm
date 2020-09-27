@@ -1,4 +1,4 @@
-import { NpmCompletionAssistant } from './completion-assistant'
+import { NpmCompletionAssistant } from '../completion-assistant'
 
 describe('NpmCompletionAssistant', () => {
   const assist = new NpmCompletionAssistant()
@@ -36,5 +36,27 @@ describe('NpmCompletionAssistant', () => {
     const doc = '{"name":"test","scripts":{"run":"node main.js"}}'
     let inDependencies = assist.inDependencies(doc, 31)
     expect(inDependencies).toBeFalsy()
+  })
+
+  it('should append completions for major/minor compatibility versions', () => {
+    const expected: CompletionItem[] = []
+    const maj = new CompletionItem('^1.2.3', CompletionItemKind.Package)
+    maj.insertText = '^1.2.3",'
+    maj.detail = 'latest'
+    maj.filterText = 'latest'
+    const min = new CompletionItem('~1.2.3', CompletionItemKind.Package)
+    min.insertText = '~1.2.3",'
+    min.detail = 'latest'
+    min.filterText = 'latest'
+    const exact = new CompletionItem(' 1.2.3', CompletionItemKind.Package)
+    exact.insertText = '1.2.3",'
+    exact.detail = 'latest'
+    exact.filterText = 'latest'
+    expected.push(maj)
+    expected.push(min)
+    expected.push(exact)
+    const returned: CompletionItem[] = []
+    assist.qualifiedVersions('1.2.3', 'latest', returned)
+    expect(expected).toEqual(returned)
   })
 })
