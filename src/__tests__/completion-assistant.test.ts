@@ -1,7 +1,55 @@
 import { NpmCompletionAssistant } from '../completion-assistant'
 
+// Mocking NpmDataService dependency here. Tests without a mock
+// service are in integration tests.
+const mockPackageData = jest.fn()
+const mockVersionData = jest.fn()
+jest.mock('../data-service', () => {
+  return {
+    __esModule: true,
+    NpmDataService: jest.fn().mockImplementation(() => {
+      return {
+        getPackageNames: mockPackageData,
+        getVersions: mockVersionData,
+      }
+    }),
+  }
+})
+const mockDocument = jest.fn(() => '')
+const editor: any = {
+  document: { path: 'package.json', length: 80 },
+  getTextInRange: mockDocument,
+}
+
+function context(
+  text: string,
+  line: string,
+  position: number
+): CompletionContext {
+  return {
+    text: text,
+    line: line,
+    position: position,
+    reason: CompletionReason.Character,
+  }
+}
+
 describe('NpmCompletionAssistant', () => {
   const assist = new NpmCompletionAssistant()
+
+  beforeEach(() => {
+    mockDocument.mockClear()
+    mockPackageData.mockReset()
+    mockVersionData.mockReset()
+  })
+
+  it('should not provide completions when not in dependency object', async () => {
+    const result = await assist.provideCompletionItems(
+      editor as TextEditor,
+      context('j', 'j', 1)
+    )
+    expect(result).toBeUndefined()
+  })
 
   it('should trigger properly in document with dependencies', () => {
     const doc = '{"name":"test","dependencies":{ }}'
@@ -68,32 +116,24 @@ describe('NpmCompletionAssistant', () => {
   })
 
   it('should set version replacement range to context.text + leading space', () => {
-    const context: CompletionContext = {
-      text: 'l',
-      line: '    "jest": l',
-      position: 31,
-      reason: CompletionReason.Character,
-    }
     const doc = '{"dependencies": {    "jest": l}}'
-    const result = assist.getVersionRange(context, doc)
+    const result = assist.getVersionRange(
+      context('l', '    "jest": l', 31),
+      doc
+    )
     expect(result.start).toBe(29)
     expect(result.end).toBe(31)
   })
 
   it('should set version replacement range to context.text + quotes', () => {
-    const context: CompletionContext = {
-      text: 'l',
-      line: '    "jest": "l',
-      position: 32,
-      reason: CompletionReason.Character,
-    }
+    const contextObj = context('l', '    "jest": "l', 32)
     let doc = '{"dependencies": {    "jest": "l"}}'
-    let result = assist.getVersionRange(context, doc)
+    let result = assist.getVersionRange(contextObj, doc)
     expect(result.start).toBe(29)
     expect(result.end).toBe(33)
     // Now try with trailing comma
     doc = '{"dependencies": {    "jest": "l",}}'
-    result = assist.getVersionRange(context, doc)
+    result = assist.getVersionRange(contextObj, doc)
     expect(result.start).toBe(29)
     expect(result.end).toBe(34)
   })
