@@ -49,6 +49,41 @@ describe('NpmCompletionAssistant', () => {
       context('j', 'j', 1)
     )
     expect(result).toBeUndefined()
+    expect(mockPackageData.mock.calls.length).toBe(0)
+  })
+
+  it('should offer package name completions', async () => {
+    const names = ['jest', 'jest-cli', 'je']
+    mockDocument.mockReturnValueOnce('{"name":"test","dependencies":{ je }}')
+    mockPackageData.mockResolvedValue(names)
+    const result = (await assist.provideCompletionItems(
+      editor as TextEditor,
+      context('je', ' je', 34)
+    )) as CompletionItem[]
+    expect(result).toBeTruthy()
+    expect(result[0].range?.start).toBe(32)
+    expect(result[0].range?.end).toBe(34)
+    expect(result?.map((item) => item.label.substr(2))).toEqual(names)
+  })
+
+  it('should offer package version completions', async () => {
+    mockDocument.mockReturnValueOnce(
+      '{"name":"test","dependencies":{ "jest": "l",}}'
+    )
+    mockVersionData.mockResolvedValue({
+      latest: '26.4.1',
+      alpha: '27.0.0-alpha',
+    })
+    const result = (await assist.provideCompletionItems(
+      editor as TextEditor,
+      context('l', ' "jest": "l', 42)
+    )) as CompletionItem[]
+    expect(result).toBeTruthy()
+    expect(result[0].range?.start).toBe(39)
+    expect(result[0].range?.end).toBe(44)
+    expect(result[0].label).toEqual('^26.4.1')
+    expect(result[4].label).toEqual('~27.0.0-alpha')
+    expect(result[5].filterText).toEqual('alpha')
   })
 
   it('should trigger properly in document with dependencies', () => {
