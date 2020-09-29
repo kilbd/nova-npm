@@ -1,10 +1,13 @@
 {
-  "identifier": "com.kilb.nova.npm-registry",
-  "name": "NPM Registry",
+  "identifier": "com.kilb.npm-registry",
+  "name": "npm Registry",
   "organization": "Drew Kilb",
-  "description": "Package and version autocomplete from the NPM Registry.",
-  "version": "1.0",
+  "description": "Helps add dependencies from the npm public registry to your Node project.",
+  "version": "1.0.0",
   "categories": ["completions"],
+  "license": "MIT",
+  "repository": "https://github.com/kilbdev/nova-npm",
+  "bugs": "https://github.com/kilbdev/nova-npm/issues",
 
   "main": "main.js",
 
