@@ -17,4 +17,6 @@ For those who can't quite remember a package name or can't keep up with the curr
 
 ### Disclaimer
 
-npm is a registered trademark of npm, Inc. The npm public registry is owned by npm, Inc. This extension and its author are not affiliated with npm, Inc.
+npm is a registered trademark of npm, Inc. The npm public registry and the npm logo are the property of npm, Inc. The npm logo is used here with permission.
+
+_This extension and its author are not affiliated with npm, Inc._

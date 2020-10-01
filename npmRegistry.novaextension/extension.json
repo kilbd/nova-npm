@@ -3,7 +3,7 @@
   "name": "npm Registry",
   "organization": "Drew Kilb",
   "description": "Helps add dependencies from the npm public registry to your Node project.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "categories": ["completions"],
   "license": "MIT",
   "repository": "https://github.com/kilbdev/nova-npm",
