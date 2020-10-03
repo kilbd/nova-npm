@@ -11,9 +11,20 @@
 
   "main": "main.js",
 
+  "commands": {
+    "extensions": [
+      {
+        "title": "Install node packages",
+        "command": "npmInstall",
+        "when": "editorHasFocus"
+      }
+    ]
+  },
+
   "activationEvents": ["onWorkspaceContains:package.json"],
 
   "entitlements": {
+    "filesystem": "readonly",
     "requests": true
   }
 }
