@@ -15,7 +15,6 @@ nova.assistants.registerCompletionAssistant(
 )
 
 nova.commands.register('npmInstall', (workspace: Workspace) => {
-  const command = new InstallCommand()
-  const roots = command.findPackageJsons(workspace.path)
-  console.log(roots)
+  const command = new InstallCommand('npm')
+  command.run(workspace)
 })

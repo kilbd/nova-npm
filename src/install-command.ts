@@ -1,5 +1,18 @@
 export class InstallCommand {
-  constructor() {}
+  constructor(private manager: string) {}
+
+  run(workspace: Workspace): void {
+    const roots = this.findPackageJsons(workspace.path)
+    if (roots.length > 1) {
+      workspace.showChoicePalette(
+        roots,
+        { placeholder: 'Which package.json?' },
+        (selected) => {
+          console.log(selected)
+        }
+      )
+    }
+  }
 
   findPackageJsons(dir: string | null): string[] {
     const results: string[] = []
