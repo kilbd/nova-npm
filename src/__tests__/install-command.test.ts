@@ -11,7 +11,11 @@ const mockShowChoicePalette = jest.fn(
     callback(choices[0])
   }
 )
-const mockShowInputPalette = jest.fn()
+const mockShowInputPalette = jest.fn(
+  (details: string, opt: any, callback: (input: string | null) => void) => {
+    callback('jest -d')
+  }
+)
 const mockWorkspace: any = {
   path: '/Users/test',
   showChoicePalette: mockShowChoicePalette,
@@ -61,6 +65,7 @@ describe('InstallCommand', () => {
   it('should show a root folder picker before package input', () => {
     command.run(mockWorkspace as Workspace)
     expect(mockShowChoicePalette.mock.calls.length).toBe(1)
+    expect(mockShowInputPalette.mock.calls.length).toBe(1)
   })
 
   it('should skip showing a choice picker before package input', () => {
@@ -73,6 +78,12 @@ describe('InstallCommand', () => {
       .mockReturnValueOnce(false)
     command.run(mockWorkspace as Workspace)
     expect(mockShowChoicePalette.mock.calls.length).toBe(0)
+    expect(mockShowInputPalette.mock.calls.length).toBe(1)
+  })
+
+  it('should gather user input', () => {
+    command.showPackageInput(mockWorkspace as Workspace)
+    expect(mockShowInputPalette.mock.calls.length).toBe(1)
   })
 
   it('should find a package.json in top directory', () => {
