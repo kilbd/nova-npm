@@ -2,8 +2,8 @@ import { NpmDataService } from './data-service'
 
 export class NpmCompletionAssistant implements CompletionAssistant {
   dataSvc: NpmDataService
-  packageTest = /^(\s*)"?([@a-z0-9/_-]+)/
-  versionTest = /^(\s*)"([@a-z0-9/_-]+)":( *"?[~^]?)([a-z\.0-9_-]+)/
+  packageTest = /^(\s*)"?([@a-z0-9\/_-]+)/
+  versionTest = /^(\s*)"([@a-z0-9\/_-]+)":( *"?[~^]?)([a-z\.0-9_-]+)/
   // packageFormatTest = /^(\s*)"([@a-z0-9/_-]+)/
   // versionFormatTest = /^(\s*)"([@a-z0-9/_-]+)": "([^~]?(\d+\.?){0,3})/
 
@@ -14,10 +14,11 @@ export class NpmCompletionAssistant implements CompletionAssistant {
   async provideCompletionItems(
     editor: TextEditor,
     context: CompletionContext
-  ): Promise<CompletionItem[] | void> {
+  ): Promise<CompletionItem[]> {
     if (editor?.document?.path?.indexOf('package.json') !== -1) {
       let doc = editor.getTextInRange(new Range(0, editor.document.length))
       if (this.inDependencies(doc, context.position)) {
+        console.log(context.text, context.line)
         if (this.versionTest.test(context.line)) {
           const replaceRange = this.getVersionRange(context, doc)
           let options: CompletionItem[] = []
@@ -34,6 +35,7 @@ export class NpmCompletionAssistant implements CompletionAssistant {
               this.qualifiedVersions(versions[key], key, options, replaceRange)
             }
           })
+          console.log(`Provided ${options.length} options`)
           return options
         } else if (this.packageTest.test(context.line)) {
           const pkgMatch = context.line.match(this.packageTest)
@@ -56,6 +58,7 @@ export class NpmCompletionAssistant implements CompletionAssistant {
         }
       }
     }
+    return []
   }
 
   inDependencies(doc: string, position: number): boolean {
