@@ -48,7 +48,7 @@ describe('NpmCompletionAssistant', () => {
       editor as TextEditor,
       context('j', 'j', 1)
     )
-    expect(result).toBeUndefined()
+    expect(result).toEqual([])
     expect(mockPackageData.mock.calls.length).toBe(0)
   })
 
@@ -131,7 +131,7 @@ describe('NpmCompletionAssistant', () => {
     min.insertText = ' "~1.2.3",'
     min.detail = 'latest'
     min.filterText = 'latest'
-    const exact = new CompletionItem(' 1.2.3', CompletionItemKind.Package)
+    const exact = new CompletionItem('1.2.3', CompletionItemKind.Package)
     exact.insertText = ' "1.2.3",'
     exact.detail = 'latest'
     exact.filterText = 'latest'

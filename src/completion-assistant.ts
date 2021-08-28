@@ -82,33 +82,18 @@ export class NpmCompletionAssistant implements CompletionAssistant {
     list: CompletionItem[],
     range?: Range
   ): void {
-    const majVersion = new CompletionItem(
-      `^${version}`,
-      CompletionItemKind.Package
-    )
-    majVersion.detail = label
-    majVersion.filterText = label
-    majVersion.insertText = ` "^${version}",`
-    if (range) majVersion.range = range
-    const minorVersion = new CompletionItem(
-      `~${version}`,
-      CompletionItemKind.Package
-    )
-    minorVersion.detail = label
-    minorVersion.filterText = label
-    minorVersion.insertText = ` "~${version}",`
-    if (range) minorVersion.range = range
-    const exactVersion = new CompletionItem(
-      ` ${version}`,
-      CompletionItemKind.Package
-    )
-    exactVersion.insertText = ` "${version}",`
-    exactVersion.detail = label
-    exactVersion.filterText = label
-    if (range) exactVersion.range = range
-    list.push(majVersion)
-    list.push(minorVersion)
-    list.push(exactVersion)
+    const prefixes = ['^', '~', '']
+    prefixes.forEach((prefix) => {
+      const completion = new CompletionItem(
+        `${prefix}${version}`,
+        CompletionItemKind.Package
+      )
+      completion.detail = label
+      completion.filterText = label
+      completion.insertText = ` "${prefix}${version}",`
+      if (range) completion.range = range
+      list.push(completion)
+    })
   }
 
   getVersionRange(context: CompletionContext, document: string): Range {
