@@ -15,6 +15,7 @@ describe('NpmDataService', () => {
         {
           package: {
             name: 'jes',
+            version: '1.0.1',
           },
           score: {
             detail: {
@@ -25,6 +26,7 @@ describe('NpmDataService', () => {
         {
           package: {
             name: 'jest',
+            version: '27.0.1',
           },
           score: {
             detail: {
@@ -35,6 +37,7 @@ describe('NpmDataService', () => {
         {
           package: {
             name: 'jest-cli',
+            version: '27.0.1',
           },
           score: {
             detail: {
@@ -44,7 +47,11 @@ describe('NpmDataService', () => {
         },
       ])
     )
-    const expected = ['jest', 'jest-cli', 'jes']
+    const expected = [
+      ['jest', '27.0.1'],
+      ['jest-cli', '27.0.1'],
+      ['jes', '1.0.1'],
+    ]
     expect.assertions(3)
     const result = await service.getPackageNames('jes')
     expect(fetchMock.mock.calls.length).toBe(1)

@@ -2,8 +2,8 @@ import { NpmDataService } from './data-service'
 
 export class NpmCompletionAssistant implements CompletionAssistant {
   dataSvc: NpmDataService
-  packageTest = /^(\s*)"?([@a-z0-9/_-]+)/
-  versionTest = /^(\s*)"([@a-z0-9/_-]+)":( *"?[~^]?)([a-z\.0-9_-]+)/
+  packageTest = /^(\s*)"?([@a-z0-9\/_-]+)/
+  versionTest = /^(\s*)"([@a-z0-9\/_-]+)": *"?([~^]?)([a-z\.0-9_-]+)/
   // packageFormatTest = /^(\s*)"([@a-z0-9/_-]+)/
   // versionFormatTest = /^(\s*)"([@a-z0-9/_-]+)": "([^~]?(\d+\.?){0,3})/
 
@@ -14,38 +14,34 @@ export class NpmCompletionAssistant implements CompletionAssistant {
   async provideCompletionItems(
     editor: TextEditor,
     context: CompletionContext
-  ): Promise<CompletionItem[] | void> {
+  ): Promise<CompletionItem[]> {
     if (editor?.document?.path?.indexOf('package.json') !== -1) {
       let doc = editor.getTextInRange(new Range(0, editor.document.length))
       if (this.inDependencies(doc, context.position)) {
         if (this.versionTest.test(context.line)) {
-          const replaceRange = this.getVersionRange(context, doc)
           let options: CompletionItem[] = []
           const matches = context.line.match(this.versionTest)
           const versions = await this.dataSvc.getVersions(matches?.[2])
-          this.qualifiedVersions(
-            versions.latest,
-            'latest',
-            options,
-            replaceRange
-          )
+          this.qualifiedVersions(versions.latest, 'latest', options)
           Object.keys(versions).forEach((key) => {
             if (key !== 'latest') {
-              this.qualifiedVersions(versions[key], key, options, replaceRange)
+              this.qualifiedVersions(versions[key], key, options)
             }
           })
           return options
         } else if (this.packageTest.test(context.line)) {
           const pkgMatch = context.line.match(this.packageTest)
-          const packages: string[] = await this.dataSvc.getPackageNames(
-            pkgMatch?.[2]
-          )
+          const packages: [
+            string,
+            string
+          ][] = await this.dataSvc.getPackageNames(pkgMatch?.[2])
           return packages.map((pkg, idx) => {
             let item = new CompletionItem(
-              `${idx + 1} ${pkg}`,
+              `${idx + 1} ${pkg[0]}`,
               CompletionItemKind.Package
             )
-            item.insertText = `"${pkg}": `
+            item.insertText = `"${pkg[0]}": "\${0:^${pkg[1]}}",`
+            item.insertTextFormat = InsertTextFormat.Snippet
             const indentChars = pkgMatch?.[1]?.length || 0
             item.range = new Range(
               context.position - context.line.length + indentChars,
@@ -56,6 +52,7 @@ export class NpmCompletionAssistant implements CompletionAssistant {
         }
       }
     }
+    return []
   }
 
   inDependencies(doc: string, position: number): boolean {
@@ -76,45 +73,22 @@ export class NpmCompletionAssistant implements CompletionAssistant {
   qualifiedVersions(
     version: string,
     label: string,
-    list: CompletionItem[],
-    range?: Range
+    list: CompletionItem[]
   ): void {
-    const majVersion = new CompletionItem(
-      `^${version}`,
-      CompletionItemKind.Package
-    )
-    majVersion.detail = label
-    majVersion.filterText = label
-    majVersion.insertText = ` "^${version}",`
-    if (range) majVersion.range = range
-    const minorVersion = new CompletionItem(
-      `~${version}`,
-      CompletionItemKind.Package
-    )
-    minorVersion.detail = label
-    minorVersion.filterText = label
-    minorVersion.insertText = ` "~${version}",`
-    if (range) minorVersion.range = range
-    const exactVersion = new CompletionItem(
-      ` ${version}`,
-      CompletionItemKind.Package
-    )
-    exactVersion.insertText = ` "${version}",`
-    exactVersion.detail = label
-    exactVersion.filterText = label
-    if (range) exactVersion.range = range
-    list.push(majVersion)
-    list.push(minorVersion)
-    list.push(exactVersion)
+    const prefixes = ['^', '~', '']
+    prefixes.forEach((prefix) => {
+      const completionText = `${prefix}${version}`
+      const byLabel = this.generateCompletion(completionText, label)
+      byLabel.filterText = label
+      const byText = this.generateCompletion(completionText, label)
+      list.push(byLabel)
+      list.push(byText)
+    })
   }
 
-  getVersionRange(context: CompletionContext, document: string): Range {
-    const matches = context.line.match(this.versionTest)
-    const vLength: number = matches ? matches[3].length + matches[4].length : 0
-    // Want to see if a quote mark or comma follows the cursor
-    const afterCursor = document.substr(context.position, 10)
-    const matchEnd = afterCursor.match(/^("?,?)/)
-    const postLength = matchEnd?.[1]?.length || 0
-    return new Range(context.position - vLength, context.position + postLength)
+  generateCompletion(text: string, label: string): CompletionItem {
+    const completion = new CompletionItem(text, CompletionItemKind.Package)
+    completion.detail = label
+    return completion
   }
 }
