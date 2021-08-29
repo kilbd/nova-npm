@@ -10,5 +10,6 @@ exports.deactivate = function () {
 
 nova.assistants.registerCompletionAssistant(
   'json',
-  new NpmCompletionAssistant()
+  new NpmCompletionAssistant(),
+  { triggerChars: new Charset('-@/^~.') }
 )

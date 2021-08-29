@@ -48,22 +48,49 @@ describe('NpmCompletionAssistant', () => {
       editor as TextEditor,
       context('j', 'j', 1)
     )
-    expect(result).toBeUndefined()
+    expect(result).toEqual([])
     expect(mockPackageData.mock.calls.length).toBe(0)
   })
 
   it('should offer package name completions', async () => {
-    const names = ['jest', 'jest-cli', 'je']
+    const packages = [
+      ['jest', '27.0.1'],
+      ['jest-cli', '27.0.1'],
+      ['je', '1.0.1'],
+    ]
+    const expected = [
+      '"jest": "${0:^27.0.1}",',
+      '"jest-cli": "${0:^27.0.1}",',
+      '"je": "${0:^1.0.1}",',
+    ]
     mockDocument.mockReturnValueOnce('{"name":"test","dependencies":{ je }}')
-    mockPackageData.mockResolvedValue(names)
+    mockPackageData.mockResolvedValue(packages)
     const result = (await assist.provideCompletionItems(
       editor as TextEditor,
       context('je', ' je', 34)
     )) as CompletionItem[]
     expect(result).toBeTruthy()
+    for (let [index, item] of result.entries()) {
+      expect(item.insertText).toBe(expected[index])
+      expect(item.range?.start).toBe(32)
+      expect(item.range?.end).toBe(34)
+    }
+  })
+
+  it('should include full kebab-cased name in completion range', async () => {
+    const packages = [['html-webpack-plugin', '5.3.2']]
+    mockDocument.mockReturnValueOnce(
+      '{"name":"test","dependencies":{ html-w }}'
+    )
+    mockPackageData.mockResolvedValue(packages)
+    const result = (await assist.provideCompletionItems(
+      editor as TextEditor,
+      context('html-w', ' html-w', 38)
+    )) as CompletionItem[]
+    expect(result).toBeTruthy()
+    expect(result.length).toBe(1)
     expect(result[0].range?.start).toBe(32)
-    expect(result[0].range?.end).toBe(34)
-    expect(result?.map((item) => item.label.substr(2))).toEqual(names)
+    expect(result[0].range?.end).toBe(38)
   })
 
   it('should offer package version completions', async () => {
@@ -79,11 +106,9 @@ describe('NpmCompletionAssistant', () => {
       context('l', ' "jest": "l', 42)
     )) as CompletionItem[]
     expect(result).toBeTruthy()
-    expect(result[0].range?.start).toBe(39)
-    expect(result[0].range?.end).toBe(44)
     expect(result[0].label).toEqual('^26.4.1')
-    expect(result[4].label).toEqual('~27.0.0-alpha')
-    expect(result[5].filterText).toEqual('alpha')
+    expect(result[8].label).toEqual('~27.0.0-alpha')
+    expect(result[8].filterText).toEqual('alpha')
   })
 
   it('should trigger properly in document with dependencies', () => {
@@ -124,52 +149,28 @@ describe('NpmCompletionAssistant', () => {
   it('should append completions for major/minor compatibility versions', () => {
     const expected: CompletionItem[] = []
     const maj = new CompletionItem('^1.2.3', CompletionItemKind.Package)
-    maj.insertText = ' "^1.2.3",'
     maj.detail = 'latest'
     maj.filterText = 'latest'
+    const majNum = new CompletionItem('^1.2.3', CompletionItemKind.Package)
+    majNum.detail = 'latest'
     const min = new CompletionItem('~1.2.3', CompletionItemKind.Package)
-    min.insertText = ' "~1.2.3",'
     min.detail = 'latest'
     min.filterText = 'latest'
-    const exact = new CompletionItem(' 1.2.3', CompletionItemKind.Package)
-    exact.insertText = ' "1.2.3",'
+    const minNum = new CompletionItem('~1.2.3', CompletionItemKind.Package)
+    minNum.detail = 'latest'
+    const exact = new CompletionItem('1.2.3', CompletionItemKind.Package)
     exact.detail = 'latest'
     exact.filterText = 'latest'
+    const exactNum = new CompletionItem('1.2.3', CompletionItemKind.Package)
+    exactNum.detail = 'latest'
     expected.push(maj)
+    expected.push(majNum)
     expected.push(min)
+    expected.push(minNum)
     expected.push(exact)
+    expected.push(exactNum)
     let returned: CompletionItem[] = []
     assist.qualifiedVersions('1.2.3', 'latest', returned)
     expect(expected).toEqual(returned)
-    const range = new Range(10, 20)
-    maj.range = range
-    min.range = range
-    exact.range = range
-    returned = []
-    assist.qualifiedVersions('1.2.3', 'latest', returned, range)
-    expect(expected).toEqual(returned)
-  })
-
-  it('should set version replacement range to context.text + leading space', () => {
-    const doc = '{"dependencies": {    "jest": l}}'
-    const result = assist.getVersionRange(
-      context('l', '    "jest": l', 31),
-      doc
-    )
-    expect(result.start).toBe(29)
-    expect(result.end).toBe(31)
-  })
-
-  it('should set version replacement range to context.text + quotes', () => {
-    const contextObj = context('l', '    "jest": "l', 32)
-    let doc = '{"dependencies": {    "jest": "l"}}'
-    let result = assist.getVersionRange(contextObj, doc)
-    expect(result.start).toBe(29)
-    expect(result.end).toBe(33)
-    // Now try with trailing comma
-    doc = '{"dependencies": {    "jest": "l",}}'
-    result = assist.getVersionRange(contextObj, doc)
-    expect(result.start).toBe(29)
-    expect(result.end).toBe(34)
   })
 })
