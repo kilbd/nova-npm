@@ -72,7 +72,25 @@ describe('NpmCompletionAssistant', () => {
     expect(result).toBeTruthy()
     for (let [index, item] of result.entries()) {
       expect(item.insertText).toBe(expected[index])
+      expect(item.range?.start).toBe(32)
+      expect(item.range?.end).toBe(34)
     }
+  })
+
+  it('should include full kebab-cased name in completion range', async () => {
+    const packages = [['html-webpack-plugin', '5.3.2']]
+    mockDocument.mockReturnValueOnce(
+      '{"name":"test","dependencies":{ html-w }}'
+    )
+    mockPackageData.mockResolvedValue(packages)
+    const result = (await assist.provideCompletionItems(
+      editor as TextEditor,
+      context('html-w', ' html-w', 38)
+    )) as CompletionItem[]
+    expect(result).toBeTruthy()
+    expect(result.length).toBe(1)
+    expect(result[0].range?.start).toBe(32)
+    expect(result[0].range?.end).toBe(38)
   })
 
   it('should offer package version completions', async () => {
