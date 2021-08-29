@@ -42,6 +42,11 @@ export class NpmCompletionAssistant implements CompletionAssistant {
             )
             item.insertText = `"${pkg[0]}": "\${0:^${pkg[1]}}",`
             item.insertTextFormat = InsertTextFormat.Snippet
+            const indentChars = pkgMatch?.[1]?.length || 0
+            item.range = new Range(
+              context.position - context.line.length + indentChars,
+              context.position
+            )
             return item
           })
         }
