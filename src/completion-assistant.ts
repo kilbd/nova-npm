@@ -1,9 +1,9 @@
-import { NpmDataService } from './data-service'
+import { NpmDataService, NpmsIoData } from './data-service'
 
 export class NpmCompletionAssistant implements CompletionAssistant {
   dataSvc: NpmDataService
   packageTest = /^(\s*)"?([@a-z0-9\/_-]+)/
-  versionTest = /^(\s*)"([@a-z0-9\/_-]+)":( *"?[~^]?)([a-z\.0-9_-]+)/
+  versionTest = /^(\s*)"([@a-z0-9\/_-]+)": *"?([~^]?)([a-z\.0-9_-]+)/
   // packageFormatTest = /^(\s*)"([@a-z0-9/_-]+)/
   // versionFormatTest = /^(\s*)"([@a-z0-9/_-]+)": "([^~]?(\d+\.?){0,3})/
 
@@ -18,7 +18,6 @@ export class NpmCompletionAssistant implements CompletionAssistant {
     if (editor?.document?.path?.indexOf('package.json') !== -1) {
       let doc = editor.getTextInRange(new Range(0, editor.document.length))
       if (this.inDependencies(doc, context.position)) {
-        console.log(context.text, context.line)
         if (this.versionTest.test(context.line)) {
           const replaceRange = this.getVersionRange(context, doc)
           let options: CompletionItem[] = []
@@ -35,19 +34,20 @@ export class NpmCompletionAssistant implements CompletionAssistant {
               this.qualifiedVersions(versions[key], key, options, replaceRange)
             }
           })
-          console.log(`Provided ${options.length} options`)
           return options
         } else if (this.packageTest.test(context.line)) {
           const pkgMatch = context.line.match(this.packageTest)
-          const packages: string[] = await this.dataSvc.getPackageNames(
-            pkgMatch?.[2]
-          )
+          const packages: [
+            string,
+            string
+          ][] = await this.dataSvc.getPackageNames(pkgMatch?.[2])
           return packages.map((pkg, idx) => {
             let item = new CompletionItem(
-              `${idx + 1} ${pkg}`,
+              `${idx + 1} ${pkg[0]}`,
               CompletionItemKind.Package
             )
-            item.insertText = `"${pkg}": `
+            item.insertText = `"${pkg[0]}": "\${0:^${pkg[1]}}",`
+            item.insertTextFormat = InsertTextFormat.Snippet
             const indentChars = pkgMatch?.[1]?.length || 0
             item.range = new Range(
               context.position - context.line.length + indentChars,
@@ -84,15 +84,21 @@ export class NpmCompletionAssistant implements CompletionAssistant {
   ): void {
     const prefixes = ['^', '~', '']
     prefixes.forEach((prefix) => {
-      const completion = new CompletionItem(
+      const byLabel = new CompletionItem(
         `${prefix}${version}`,
         CompletionItemKind.Package
       )
-      completion.detail = label
-      completion.filterText = label
-      completion.insertText = ` "${prefix}${version}",`
-      if (range) completion.range = range
-      list.push(completion)
+      byLabel.detail = label
+      byLabel.filterText = label
+      // byLabel.insertText = `${prefix}${version}`
+      // if (range) byLabel.range = range
+      const byText = new CompletionItem(
+        `${prefix}${version}`,
+        CompletionItemKind.Package
+      )
+      byText.detail = label
+      list.push(byLabel)
+      list.push(byText)
     })
   }
 

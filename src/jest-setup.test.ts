@@ -9,6 +9,11 @@ enum MockCompletionReason {
   Invoke,
 }
 
+enum MockInsertTextFormat {
+  PlainText,
+  Snippet,
+}
+
 class MockRange {
   constructor(readonly start: number, readonly end: number) {}
 }
@@ -25,4 +30,5 @@ const testGlobal = global as any
 testGlobal.CompletionItem = MockCompletionItem
 testGlobal.CompletionItemKind = MockCompletionItemKind
 testGlobal.CompletionReason = MockCompletionReason
+testGlobal.InsertTextFormat = MockInsertTextFormat
 testGlobal.Range = MockRange
